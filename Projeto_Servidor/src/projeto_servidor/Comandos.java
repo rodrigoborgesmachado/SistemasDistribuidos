@@ -9,13 +9,6 @@ package projeto_servidor;
  *
  * @author root
  */
-public class Projeto_Servidor {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
-    }
+public class Comandos {
     
 }
