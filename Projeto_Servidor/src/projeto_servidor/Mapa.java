@@ -42,7 +42,7 @@ public class Mapa {
     }
     
     public boolean Existe(BigInteger num, String str){
-        this.Mapa_Requisicoes.containsValue(num);
+        return this.Mapa_Requisicoes.containsValue(num);
     }
     
 }
