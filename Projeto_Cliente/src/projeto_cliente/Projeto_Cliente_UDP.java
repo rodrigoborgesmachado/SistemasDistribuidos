@@ -14,57 +14,32 @@ import static jdk.nashorn.tools.ShellFunctions.input;
  */
 public class Projeto_Cliente_UDP {
 
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) 
     {
         try{
-            byte[] sendData;
-            byte[] receiveData;
+            
             int Porta = 9877;
-            InetAddress IPAddress = InetAddress.getByName("localhost");
             DatagramSocket clientSocket;
-            while(true){
-                BufferedReader inFromUser =
-                new BufferedReader(new InputStreamReader(System.in));
+            InetAddress IPAddress = InetAddress.getByName("localhost");
                 
-                clientSocket = new DatagramSocket();                
+            clientSocket = new DatagramSocket();                
 
-                sendData    = new byte[1024];
-                receiveData = new byte[1024];
-
-                String sentence = inFromUser.readLine();
-                
-               
-                System.out.println("sentence: " + sentence);
-                sendData = sentence.getBytes();
-
-                EnviaPacote(sendData, clientSocket, IPAddress, Porta);
+            Thread thread = new Thread(new ClienteEnviaDados(clientSocket, IPAddress, Porta));
+            thread.start();
                                 
-                String modifiedSentence = RecebePacote(receiveData, clientSocket);
+            Thread thread2 = new Thread(new ClienteApresentaDados(clientSocket, IPAddress, Porta));
+            thread2.start();
                 
-                System.out.println("FROM SERVER:" + modifiedSentence);
-                clientSocket.close();
-                clientSocket.disconnect();
-            }
+            clientSocket.close();
+            clientSocket.disconnect();
         }
         catch(Exception e){
             System.out.println("FALTAL ERROR!");
         }
-    }
-    
-    public static void EnviaPacote(byte[] sendData, DatagramSocket clientSocket, InetAddress IPAddress, int Porta) throws IOException{
-        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Porta);
-        clientSocket.send(sendPacket);
-    }
-    
-    public static String RecebePacote(byte[] receiveData, DatagramSocket clientSocket) throws IOException{
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        clientSocket.receive(receivePacket);
-        String modifiedSentence = new String(receivePacket.getData());
-        System.out.println("\nMostra: " + modifiedSentence);
-        return modifiedSentence + "\nTamanho: " + receivePacket.getData().length;
     }
     
 }

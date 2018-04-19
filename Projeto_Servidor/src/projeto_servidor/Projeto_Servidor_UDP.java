@@ -19,11 +19,11 @@ public class Projeto_Servidor_UDP {
     public static void main(String[] args) {
         try{
             DatagramSocket serverSocket = new DatagramSocket(9877);
-            serverSocket.setReceiveBufferSize(1400);
-            byte[] receiveData = new byte[1024];
-            byte[] sendData = new byte[1024];
+            serverSocket.setReceiveBufferSize(1024);
             while(true)
             {
+                byte[] receiveData = new byte[1024];
+                byte[] sendData = new byte[1024];
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 serverSocket.receive(receivePacket);
                 String sentence = new String( receivePacket.getData());
