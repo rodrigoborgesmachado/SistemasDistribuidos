@@ -16,28 +16,40 @@ import java.net.InetAddress;
  * @author root
  */
 public class ClienteApresentaDados implements Runnable {
-    InetAddress IPAddress;
-    int Porta;
-    String resposta;
+    DatagramSocket clientSocket;
     
-    public ClienteApresentaDados(InetAddress IP, int Port){
-        this.IPAddress = IP;
-        this.Porta = Port;
-        this.resposta = resposta;
+    public ClienteApresentaDados(DatagramSocket clientSocket){
+        this.clientSocket = clientSocket;
     }
     
     @Override
     public void run() {
-        try{
-            while(true){
+        try
+        {
+            while(true)
+            {
+                byte[] receiveData = new byte[1450];
+               
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                clientSocket.receive(receivePacket);
+                String comando = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 
-                while(resposta== null);
+                if(comando.charAt(0) == '9')
+                {
+                    System.out.println("Finished!");
+                    break;
+                }     
                 
-                System.out.println("Resposta: " + resposta);
-            }
+                if(!comando.isEmpty())
+                {
+                    System.out.println("Result: " +  comando);
+                    System.out.println("New request: ");
+                }
+            }           
         }
-        catch(Exception e){
-            System.out.println("FUDEU Apresenta!");
+        catch(Exception e)
+        {
+            System.out.println("FUCKED Show!");
         }
         
     }

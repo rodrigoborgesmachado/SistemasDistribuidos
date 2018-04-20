@@ -10,6 +10,9 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -19,42 +22,62 @@ public class ClienteEnviaDados implements Runnable {
     InetAddress IPAddress;
     int Porta;
     String resposta = null;
+    DatagramSocket clientSocket;
     
-    public ClienteEnviaDados(InetAddress IP, int Port){
+    public ClienteEnviaDados(InetAddress IP, int Port,DatagramSocket clientSocket){
         IPAddress = IP;
         Porta = Port;
+        this.clientSocket = clientSocket;
     }
     
     @Override
     public void run() {
-        try{
-            DatagramSocket clientSocket;
-            while(true){
-                clientSocket = new DatagramSocket();     
-                BufferedReader inFromUser =
+        int op=0;
+        BufferedReader inFromUser =
                    new BufferedReader(new InputStreamReader(System.in));
-
-                byte[] sendData;
-
-                sendData    = new byte[1024];   
+        try
+        {    
+            EscreveMenuCompleto();
+            while(op != 9)
+            {
+                
                 String sentence = inFromUser.readLine();
-
+                try
+                {
+                    op = Integer.parseInt(sentence.charAt(0) + "");
+                }
+                catch(Exception e)
+                {
+                    op = 0;
+                    EscreveMenuCompleto();
+                    continue;
+                }
+                
+                byte[] sendData;
+                sendData = new byte[1450];   
+                
                 sendData = sentence.getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Porta);
                 clientSocket.send(sendPacket);   
-                
-                byte[] receiveData;
-                receiveData = new byte[1024];
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                clientSocket.receive(receivePacket);
-                String rr = new String(receivePacket.getData());
-                resposta = rr;
-                
             }
         }
-        catch(Exception e){
-            System.out.println("FUDEU! Cliente Envia dados");
+        catch(Exception e)
+        {
+            System.out.println("FUDEU! Cliente Envia dados! Error: " + e.getMessage());
         }
         
+    }
+    
+    public static void EscreveMenuCompleto()
+    {
+        System.out.println("------- ROYALE TOPS - JONAS -------");
+        System.out.println("|Choice your option (just numbers): ");
+        System.out.println("|1. Create <key> <value>");
+        System.out.println("|2. Atualizar <key> <value>");
+        System.out.println("|3. Drop <key>");
+        System.out.println("|4. Search <Key>");
+        System.out.println("|5. Show");
+        System.out.println("|9. Sair");
+        System.out.print("\n\nOption:  ");
     }
 }
