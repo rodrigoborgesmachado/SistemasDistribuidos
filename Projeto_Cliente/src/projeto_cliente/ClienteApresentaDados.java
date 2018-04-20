@@ -16,29 +16,28 @@ import java.net.InetAddress;
  * @author root
  */
 public class ClienteApresentaDados implements Runnable {
-    static DatagramSocket clientSocket;
     InetAddress IPAddress;
     int Porta;
+    String resposta;
     
-    public ClienteApresentaDados(DatagramSocket client, InetAddress IP, int Port){
-        clientSocket = client;
-        IPAddress = IP;
-        Porta = Port;
+    public ClienteApresentaDados(InetAddress IP, int Port){
+        this.IPAddress = IP;
+        this.Porta = Port;
+        this.resposta = resposta;
     }
     
     @Override
     public void run() {
         try{
-            byte[] receiveData;
-            receiveData = new byte[1024];
-            
-            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            clientSocket.receive(receivePacket);
-            String modifiedSentence = new String(receivePacket.getData());
-            System.out.println("Resposta: "+ modifiedSentence);
+            while(true){
+                
+                while(resposta== null);
+                
+                System.out.println("Resposta: " + resposta);
+            }
         }
         catch(Exception e){
-            System.out.println("FUDEU!");
+            System.out.println("FUDEU Apresenta!");
         }
         
     }

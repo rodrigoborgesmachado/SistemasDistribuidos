@@ -23,19 +23,23 @@ public class Projeto_Cliente_UDP {
         try{
             
             int Porta = 9877;
-            DatagramSocket clientSocket;
-            InetAddress IPAddress = InetAddress.getByName("localhost");
-                
-            clientSocket = new DatagramSocket();                
-
-            Thread thread = new Thread(new ClienteEnviaDados(clientSocket, IPAddress, Porta));
+            InetAddress IPAddress = InetAddress.getByName("localhost");          
+            ClienteEnviaDados cliente = new ClienteEnviaDados(IPAddress, Porta);
+            
+            Thread thread = new Thread(cliente);
             thread.start();
                                 
-            Thread thread2 = new Thread(new ClienteApresentaDados(clientSocket, IPAddress, Porta));
-            thread2.start();
+            ///ClienteApresentaDados res = new ClienteApresentaDados(IPAddress, Porta, resposta);
+            ///Thread thread2 = new Thread(res);
+            ///thread2.start();
+            while(true){
                 
-            clientSocket.close();
-            clientSocket.disconnect();
+                while(cliente.resposta == null);
+                
+                System.out.println("Resposta: " + cliente.resposta);
+                cliente.resposta = null;
+            }    
+            
         }
         catch(Exception e){
             System.out.println("FALTAL ERROR!");

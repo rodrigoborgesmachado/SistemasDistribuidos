@@ -16,13 +16,11 @@ import java.net.InetAddress;
  * @author root
  */
 public class ClienteEnviaDados implements Runnable {
-    
-    static DatagramSocket clientSocket;
     InetAddress IPAddress;
     int Porta;
+    String resposta = null;
     
-    public ClienteEnviaDados(DatagramSocket client, InetAddress IP, int Port){
-        clientSocket = client;
+    public ClienteEnviaDados(InetAddress IP, int Port){
         IPAddress = IP;
         Porta = Port;
     }
@@ -30,20 +28,32 @@ public class ClienteEnviaDados implements Runnable {
     @Override
     public void run() {
         try{
-            BufferedReader inFromUser =
-                new BufferedReader(new InputStreamReader(System.in));
-        
-            byte[] sendData;
-            
-            sendData    = new byte[1024];   
-            String sentence = inFromUser.readLine();
-            
-            sendData = sentence.getBytes();
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Porta);
-            clientSocket.send(sendPacket);
+            DatagramSocket clientSocket;
+            while(true){
+                clientSocket = new DatagramSocket();     
+                BufferedReader inFromUser =
+                   new BufferedReader(new InputStreamReader(System.in));
+
+                byte[] sendData;
+
+                sendData    = new byte[1024];   
+                String sentence = inFromUser.readLine();
+
+                sendData = sentence.getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Porta);
+                clientSocket.send(sendPacket);   
+                
+                byte[] receiveData;
+                receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                clientSocket.receive(receivePacket);
+                String rr = new String(receivePacket.getData());
+                resposta = rr;
+                
+            }
         }
         catch(Exception e){
-            System.out.println("FUDEU!");
+            System.out.println("FUDEU! Cliente Envia dados");
         }
         
     }
