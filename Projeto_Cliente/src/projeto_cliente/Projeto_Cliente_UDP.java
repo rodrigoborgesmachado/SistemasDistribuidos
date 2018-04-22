@@ -5,14 +5,14 @@
  */
 package projeto_cliente;
 
-import java.io.*;
 import java.net.*;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import static jdk.nashorn.tools.ShellFunctions.input;
+
 /**
  *
- * @author Rodrigo Machado - Rodrigo Nogueira - Robertta Loise
+ * @author Robertta Loise, Rodrigo Machado e Rodrigo Borborema
  */
 public class Projeto_Cliente_UDP {
 
@@ -22,13 +22,25 @@ public class Projeto_Cliente_UDP {
      */
     public static void main(String[] args) 
     {
+        Properties prop = null;
+        try
+        {
+            prop = ConfigArq.getProp();
+        }
+        catch(Exception e)
+        {
+            System.out.println("There is no file of configuration!");
+            return;
+        }
+        
+        
         try{
             DatagramSocket clientSocket = new DatagramSocket();
-            int Porta = 9877;
+            int Porta =  Integer.parseInt(prop.getProperty("client.port"));
             
             ExecutorService exec = Executors.newCachedThreadPool();
             
-            InetAddress IPAddress = InetAddress.getByName("localhost");          
+            InetAddress IPAddress = InetAddress.getByName(prop.getProperty("client.host"));          
             
             ClienteEnviaDados cliente = new ClienteEnviaDados(IPAddress, Porta, clientSocket);
             Thread thread = new Thread(cliente);
@@ -44,7 +56,7 @@ public class Projeto_Cliente_UDP {
             
         }
         catch(Exception e){
-            System.out.println("FALTAL ERROR!Erro: " + e.getMessage());
+            System.out.println("ERROR ERROR: " + e.getMessage());
         }
     }
     

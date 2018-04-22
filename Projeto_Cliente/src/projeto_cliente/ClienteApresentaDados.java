@@ -13,12 +13,13 @@ import java.net.InetAddress;
 
 /**
  *
- * @author root
+ * @author Robertta Loise, Rodrigo Machado e Rodrigo Borborema
  */
 public class ClienteApresentaDados implements Runnable {
     DatagramSocket clientSocket;
     
-    public ClienteApresentaDados(DatagramSocket clientSocket){
+    public ClienteApresentaDados(DatagramSocket clientSocket)
+    {
         this.clientSocket = clientSocket;
     }
     
@@ -49,7 +50,7 @@ public class ClienteApresentaDados implements Runnable {
         }
         catch(Exception e)
         {
-            System.out.println("FUCKED Show!");
+            System.out.println("ERROR ERROR!" + e.getMessage());
         }
         
     }

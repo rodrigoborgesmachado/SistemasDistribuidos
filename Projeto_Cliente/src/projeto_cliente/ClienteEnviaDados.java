@@ -10,13 +10,10 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  *
- * @author root
+ * @author Robertta Loise, Rodrigo Machado e Rodrigo Borborema
  */
 public class ClienteEnviaDados implements Runnable {
     InetAddress IPAddress;
@@ -33,8 +30,7 @@ public class ClienteEnviaDados implements Runnable {
     @Override
     public void run() {
         int op=0;
-        BufferedReader inFromUser =
-                   new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         try
         {    
             EscreveMenuCompleto();
@@ -44,7 +40,7 @@ public class ClienteEnviaDados implements Runnable {
                 String sentence = inFromUser.readLine();
                 try
                 {
-                    op = Integer.parseInt(sentence.charAt(0) + "");
+                    op = Integer.parseInt(RetiraLixo(sentence.charAt(0) + ""));
                 }
                 catch(Exception e)
                 {
@@ -59,11 +55,12 @@ public class ClienteEnviaDados implements Runnable {
                 sendData = sentence.getBytes();
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, Porta);
                 clientSocket.send(sendPacket);   
+                System.out.println("Sent: " + sentence);
             }
         }
         catch(Exception e)
         {
-            System.out.println("FUDEU! Cliente Envia dados! Error: " + e.getMessage());
+            System.out.println("ERROR ERROR : " + e.getMessage());
         }
         
     }
@@ -71,13 +68,19 @@ public class ClienteEnviaDados implements Runnable {
     public static void EscreveMenuCompleto()
     {
         System.out.println("------- ROYALE TOPS - JONAS -------");
-        System.out.println("|Choice your option (just numbers): ");
+        System.out.println("|Choose your option (just numbers): ");
         System.out.println("|1. Create <key> <value>");
-        System.out.println("|2. Atualizar <key> <value>");
+        System.out.println("|2. Update <key> <value>");
         System.out.println("|3. Drop <key>");
         System.out.println("|4. Search <Key>");
         System.out.println("|5. Show");
-        System.out.println("|9. Sair");
+        System.out.println("|9. Exit");
         System.out.print("\n\nOption:  ");
+    }
+    
+    ///Método para retirar o lixo da string
+    public static String RetiraLixo(String x)
+    {
+        return x.replaceAll("\u0000", "").replaceAll("\\u0000", "").replaceAll("\\]","");
     }
 }

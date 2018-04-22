@@ -1,3 +1,9 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package projeto_servidor;
 
 import java.net.DatagramPacket;
@@ -8,6 +14,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ *
+ * @author Robertta Loise, Rodrigo Machado e Rodrigo Borborema
+ */
 public class ConsumirThread implements Runnable {
     
     private ExecutorService exec;
@@ -30,6 +40,7 @@ public class ConsumirThread implements Runnable {
     public void run() {
         Log log = null;
         ProcessaThread procTrd = null;
+        
         while(true)
         {
             if(comandos != null && !comandos.isEmpty())
@@ -38,25 +49,26 @@ public class ConsumirThread implements Runnable {
                 {
                     String cmd = c.next();
                     String co = "" + cmd.charAt(0);
-                    
-                    // Comando que e para exibir o menu novamente ao cliente nao precisa ser processado
+                        
                     if(!co.contains("9")){
                         procTrd = new ProcessaThread(cmd, receivePacket, serverSocket, mapa);
                     }
                     
-                    /* Comando que e para sair, exibir o menu novamente e 
-                    listar ao cliente nao precisa ser processado*/
-                    if(!co.contains("7") && !co.contains("6") && !co.contains("5") && !co.contains("4")){
+                    /// Comandos para sair, procurar e listar ao cliente nao precisam ser processados
+                    if(!co.contains("4") && !co.contains("9") && !co.contains("5"))
+                    {
                         log = new Log(cmd);
                     }
                     
                     c.remove();
                     
-                    if(procTrd != null){
+                    if(procTrd != null)
+                    {
                         this.exec.execute(procTrd);
                     }
                     
-                    if(log != null){
+                    if(log != null)
+                    {
                         this.exec.execute(log);
                     }
                 }

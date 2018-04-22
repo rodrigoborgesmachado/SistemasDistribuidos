@@ -1,3 +1,9 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package projeto_servidor;
 
 import java.io.FileOutputStream;
@@ -5,6 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+/**
+ *
+ * @author Robertta Loise, Rodrigo Machado e Rodrigo Borborema
+ */
 public class Log implements Runnable {
     private List<String> comandos;
     int i=0;
@@ -21,27 +31,33 @@ public class Log implements Runnable {
                 
                 try{ 
                     
-                    FileOutputStream fileout = new FileOutputStream(
-                                    "./properties/log.properties", true);
-                     Properties prop = ManFileLog.getProp();
-                     prop.clear();
-                    for (String comando : comandos) {
-                        prop.put("comando"+java.util.UUID.randomUUID(), ("[" + comando + "]")
-                                .replaceAll("\u0000", "") /* removes NUL chars */
-                                .replaceAll("\\u0000", "") /* removes backslash+u0000 */);
+                    FileOutputStream fileout = new FileOutputStream("./properties/log.properties", true);
+                    Properties prop = ArquivoLog.getProp("log.properties");
+                    prop.clear();
+                    
+                    for (String comando : comandos) 
+                    {
+                        prop.put("command:"+java.util.UUID.randomUUID(), RetiraLixo("[" + comando + "]"));
                     }
-                    //System.out.println("log: "+comandos.toString());
-                    prop.store(fileout, "Log dos comandos enviados pelo cliente");
+                    
+                    prop.store(fileout, "Logs sent by client");
                     fileout.flush();
                     
-                } catch(Exception ex){
-                    ex.printStackTrace();
+                } catch(Exception e){
+                    System.out.println("ERROR ERROR: " + e.getMessage());
                 }
                 
                
                 break;
             }
-        }
+        }   
+        
+    }
+    
+    ///Método para retirar o lixo da string
+    public static String RetiraLixo(String x)
+    {
+        return x.replaceAll("\u0000", "").replaceAll("\\u0000", "");
     }
     
 }

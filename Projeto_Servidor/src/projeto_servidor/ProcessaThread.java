@@ -1,3 +1,8 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package projeto_servidor;
 
 import java.math.BigInteger;
@@ -7,6 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ *
+ * @author Robertta Loise, Rodrigo Machado e Rodrigo Borborema
+ */
 public class ProcessaThread implements Runnable{
     private List<String> comandos;
     private DatagramPacket receivePacket;
@@ -14,22 +23,22 @@ public class ProcessaThread implements Runnable{
     private String busca;
     private ArrayList<String> lista =  new ArrayList<>();
     private boolean cria, deleta, atualiza;
-    private Mapa crud;
-    private List<String> inst = new ArrayList<>();
+    private Mapa mapa;
+    private List<String> list = new ArrayList<>();
 
     
-    public ProcessaThread(){
-        /* Construtor para usar o metodo de recuperacão de dados pelo log */
-        System.out.println("Loading...");
+    public ProcessaThread()
+    {
+        System.out.println("-----Loading-----");
     }
     
-    public ProcessaThread(String comando, DatagramPacket receivePacket, 
-                                DatagramSocket serverSocket, Mapa crud){
+    public ProcessaThread(String comando, DatagramPacket receivePacket, DatagramSocket serverSocket, Mapa crud)
+    {
         this.comandos = new ArrayList<>();
         this.comandos.add(comando);
         this.receivePacket = receivePacket;
         this.serverSocket = serverSocket;
-        this.crud = crud;
+        this.mapa = crud;
     }
     
     @Override
@@ -37,139 +46,124 @@ public class ProcessaThread implements Runnable{
         byte[] sendData = new byte[1401];
         String dados="";
         
-        try{
-            for(String c : comandos){
+        try
+        {
+            /// Para cada comandos da lista
+            for(String c : comandos)
+            {
                 sendData = c.getBytes();
-                
-                /* Caso o comando do cliente seja 7 envia para o cliente 7 para encerrar */
-                if(c.contains("7")){
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
-                    serverSocket.send(sendPacket);
-                } else {
-                    
-                    inst = Arrays.asList(c.split(" ")); 
+                list = Arrays.asList(c.split(" ")); 
                    
-                    switch(inst.get(0).replaceAll("\u0000", "").replaceAll("\\u0000", "").charAt(0)){
-                        /* Criar um dado no map */
-                        case '1':
-                            cria = crud.create(new BigInteger(inst.get(1).replaceAll("\u0000", "").
-                                    replaceAll("\\u0000", "")), valor(inst));
-                            if(cria)
-                                dados = "Criado com sucesso!\n";
-                            else
-                                dados = "Não foi possivel completar a operacao\n";
-                            break;
+                switch(RetiraLixo(list.get(0)).charAt(0))
+                {
+                    /// Cria dados
+                    case '1':
+                        cria = mapa.Create(new BigInteger(RetiraLixo(list.get(1))), Value(list));
+                        if(cria)
+                            dados = "Created!\n";
+                        else
+                            dados = "Was not possible to complete the operation\n";
+                        break;
                         
-                        /* Deletar um dado no map */
-                        case '2':
-                            deleta = crud.delete(new BigInteger(inst.get(1).replaceAll("\u0000", "").
-                                    replaceAll("\\u0000", "")));
-                            if(deleta)
-                                dados = "Deletado com sucesso!\n";
-                            else
-                                dados = "Não foi possivel completar a operacao\n";
-                            break;
+                    /// Atualiza dados a partir da chave
+                    case '2':
+                        atualiza = mapa.Update(new BigInteger(RetiraLixo(list.get(1))), Value(list));
+                        if(atualiza)
+                            dados = "Updated!\n";
+                        else
+                            dados = "Was not possible to complete the operation\n";
+                        break;
+                        
 
-                        /* Atualizar um dado no map */
-                        case '3':
-                            atualiza = crud.update(new BigInteger(inst.get(1).replaceAll("\u0000", "").
-                                    replaceAll("\\u0000", "")), valor(inst));
-                             if(atualiza)
-                                dados = "Atualizado com sucesso!\n";
-                             else
-                                dados = "Não foi possivel completar a operacao\n";
-                            break;
+                    /// Delete chave
+                    case '3':
+                        deleta = mapa.Delete(new BigInteger(RetiraLixo(list.get(1))));
+                        if(deleta)
+                            dados = "Deleted!\n";
+                        else
+                            dados = "Was not possible to complete the operation\n";
+                        break;
 
-                        /* Busca um dado no map */
-                        case '4':
-                            busca = crud.search(new BigInteger(inst.get(1).replaceAll("\u0000", "").replaceAll("\\u0000", "")));
-                             if(busca != null && !busca.isEmpty())
-                                dados = busca+"\n";
-                             else
-                                 dados = "Não existe essa chave\n";
-                            break;
+                    /// Busca dado no mapa
+                    case '4':
+                        busca = mapa.Search(new BigInteger(RetiraLixo(list.get(1))));
+                        if(busca != null && !busca.isEmpty())
+                            dados = busca+"\n";
+                        else
+                            dados = "There is no key\n";
+                        break;
 
-                        /* Lista todos os dados do map */
-                        case '5':
-                            lista = crud.read();
-                             if(lista != null && !lista.isEmpty())
-                                dados = lista+"\n";
-                             else
-                                 dados = "Não há registro de dados\n";
-                            break;
-
-                        default:
-                            break;
+                    /// Retorna todos os dados
+                    case '5':
+                        lista = mapa.Read();
+                        if(lista != null && !lista.isEmpty())
+                            dados = lista + "\n";
+                        else
+                            dados = "There is no register on database\n";
+                        break;
+                        
+                    /// Envia 9 para matar cliente 
+                    case '9':
+                        dados = "9";
+                        break;
+                        
+                    default:
+                        break;
                     }
                         
-                    //dados += "Digite a opcão: ";
                     sendData = dados.getBytes();
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
                     serverSocket.send(sendPacket);
-                    //System.out.println(dados);
-                }
+                    
                 break;
             }
         } catch(Exception e){
-            e.printStackTrace();
-            e.getMessage();
+            System.out.println(e.getMessage());
         }   
     }
     
-    /* Substitui os lixos tragos junto com os dados e concatena as strings passadas*/
-    public String valor(List<String> inst){
-        String valor = "";
-        
-        for(int i=2; i < inst.size(); i++){
-            valor += inst.get(i)+" ";
-        }
-        
-        return valor.replaceAll("\u0000", "").replaceAll("\\u0000", "");
+    ///Método para retirar o lixo da string
+    public static String RetiraLixo(String x)
+    {
+        return x.replaceAll("\u0000", "").replaceAll("\\u0000", "").replaceAll("\\]","");
     }
     
-    /* Metodo utilizado pelo log para carregar os dados no map de dados */
-    public Mapa processaComando(List<String> inst, Mapa crud){
+    ///Concatena as strings passadas por referência na lista
+    public String Value(List<String> lista)
+    {
+        String value = "";
+        for(int i=2; i < lista.size(); i++)value += lista.get(i)+" ";
+        return RetiraLixo(value);
+    }
+    
+    /// Carrega os dados da lista para o mapa processando os comandos
+    public Mapa CarregaDados(String valor, Mapa mapa)
+    {
+        List<String> Lista = null;
         String dados = "";
-        String c = inst.get(1).replaceAll("\u0000", "")
-                        .replaceAll("\\u0000", "")
-                        .replaceAll("\\]","");
         
-        inst = Arrays.asList(c.split(" "));
+        valor = RetiraLixo(valor);
         
-        switch(inst.get(0).replaceAll("\u0000", "").replaceAll("\\u0000", "").charAt(0)){
+        Lista = Arrays.asList(valor.split(" "));
+        
+        switch(RetiraLixo(Lista.get(0)).charAt(0))
+        {
             case '1':
-                cria = crud.create(new BigInteger(inst.get(1).replaceAll("\u0000", "")
-                        .replaceAll("\\u0000", "")
-                        .replaceAll("\\]","")), valor(inst));
-                if(cria)
-                    dados = "Criado com sucesso!\n";
-                else
-                    dados = "Não foi possivel completar a operacao\n";
+                cria = mapa.Create(new BigInteger(Lista.get(1)), Value(Lista));
                 break;
 
             case '2':
-                deleta = crud.delete(new BigInteger(inst.get(1).replaceAll("\u0000", "")
-                        .replaceAll("\\u0000", "")
-                        .replaceAll("\\]","")));
-                if(deleta)
-                    dados = "Deletado com sucesso!\n";
-                else
-                    dados = "Não foi possivel completar a operacao\n";
+                atualiza = mapa.Update(new BigInteger(Lista.get(1)), Value(Lista));
                 break;
 
             case '3':
-                atualiza = crud.update(new BigInteger(inst.get(1).replaceAll("\u0000", "")
-                        .replaceAll("\\u0000", "")
-                        .replaceAll("\\]","")), valor(inst));
-                 if(atualiza)
-                    dados = "Atualizado com sucesso!\n";
-                 else
-                    dados = "Não foi possivel completar a operacao\n";
+                deleta = mapa.Delete(new BigInteger(Lista.get(1)));
                 break;
+                
             default:
                 break;
         }
-        return crud;
+        return mapa;
     }
     
 }
