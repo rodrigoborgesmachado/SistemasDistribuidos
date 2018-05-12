@@ -102,5 +102,5 @@ public class Mapa {
     public void setMapa(Map<BigInteger, String> mapa) {
         this.mapa = mapa;
     }
-     
+    
 }

@@ -60,7 +60,10 @@ public class MainServidor {
         
         String porta = prop.getProperty("server.port");
         DatagramSocket serverSocket = new DatagramSocket(Integer.parseInt(porta));
-
+        
+        byte[] receiveData = new byte[1401];
+        byte[] sendData = new byte[1401];
+        
         try
         {
             ExecutorService exec = Executors.newCachedThreadPool();
@@ -76,8 +79,15 @@ public class MainServidor {
                 map = pt.CarregaDados(lista.get(1), map);
             }
             
-            rcvThread = new RecebeThread(serverSocket, map);
+            Log logTrd = new Log();
+            ConsumirThread conTrd = new ConsumirThread(logTrd, pt);
+            rcvThread = new RecebeThread(conTrd, serverSocket, map);
+            
+            // Inicia as threads
             exec.execute(rcvThread);
+            exec.execute(conTrd);
+            exec.execute(logTrd);
+            exec.execute(pt);
 
             System.out.println("Server Initialized!");
             

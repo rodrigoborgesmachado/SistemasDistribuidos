@@ -16,13 +16,13 @@ import java.util.concurrent.Executors;
  */
 public class RecebeThread implements Runnable{
     private DatagramSocket serverSocket;
-    private ExecutorService executor;
+    private ConsumirThread conTrd;
     private Mapa crud;
     
-    public RecebeThread(DatagramSocket serverSocket, Mapa crud)
+    public RecebeThread(ConsumirThread conTrd, DatagramSocket serverSocket, Mapa crud)
     {
         this.serverSocket = serverSocket;
-        this.executor = Executors.newCachedThreadPool();
+        this.conTrd = conTrd;
         this.crud = crud;
     }
     
@@ -41,9 +41,12 @@ public class RecebeThread implements Runnable{
                 System.out.println("Comando: " + comando);
                
                 // Cria thread de consumir da fila e enviar para log e processador do comando.
-                if(!comando.isEmpty() && !(comando.equalsIgnoreCase(""))){
-                    ConsumirThread conTrd = new ConsumirThread(comando, receivePacket, serverSocket, crud);
-                    executor.execute(conTrd);
+                if(!comando.isEmpty() && !(comando.equalsIgnoreCase("")))
+                {
+                    conTrd.setReceivePacket(receivePacket);
+                    conTrd.setServerSocket(serverSocket);
+                    conTrd.setMapa(crud);
+                    conTrd.addComando(comando);
                 }
                                 
             }

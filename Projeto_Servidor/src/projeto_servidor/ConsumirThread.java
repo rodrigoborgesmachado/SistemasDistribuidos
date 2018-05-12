@@ -11,8 +11,10 @@ import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  *
@@ -20,60 +22,138 @@ import java.util.concurrent.Executors;
  */
 public class ConsumirThread implements Runnable {
     
-    private ExecutorService exec;
+    private Log logTrd;
+    private ProcessaThread procTrd;
     private Mapa mapa;
-    private List<String> comandos;
+    private BlockingQueue<String> comandos = new LinkedBlockingQueue<String>();
     private DatagramSocket serverSocket;
     private DatagramPacket receivePacket;
     
-    public ConsumirThread(String comando, DatagramPacket receivePacket, DatagramSocket serverSocket, Mapa mapa)
+    public ConsumirThread(Log logTrd, ProcessaThread procTrd)
     {
-        this.receivePacket = receivePacket;
-        this.serverSocket = serverSocket;
-        this.mapa = mapa;
-        comandos = new ArrayList<>();
-        comandos.add(comando);
-        this.exec = Executors.newCachedThreadPool();
+        this.logTrd = logTrd;
+        this.procTrd = procTrd;
     }
     
     @Override
     public void run() {
-        Log log = null;
-        ProcessaThread procTrd = null;
-        
         while(true)
         {
-            if(comandos != null && !comandos.isEmpty())
+            if(getComandos() == null || comandos.isEmpty())
             {
-                for(Iterator<String> c = comandos.listIterator(); c.hasNext();)
+                continue;
+            }
+            else
+            {
+                Iterator<String> com = getComandos().iterator();
+                while(com.hasNext())
                 {
-                    String cmd = c.next();
+                    String cmd = com.next();
                     String co = "" + cmd.charAt(0);
-                        
                     if(!co.contains("9")){
-                        procTrd = new ProcessaThread(cmd, receivePacket, serverSocket, mapa);
+                        procTrd.setReceivePacket(receivePacket);
+                        procTrd.setServerSocket(serverSocket);
+                        procTrd.setMapa(mapa);
+                        procTrd.addComando(cmd);
                     }
                     
                     /// Comandos para sair, procurar e listar ao cliente nao precisam ser processados
                     if(!co.contains("4") && !co.contains("9") && !co.contains("5"))
                     {
-                        log = new Log(cmd);
+                        logTrd.addComando(cmd);
                     }
                     
-                    c.remove();
-                    
-                    if(procTrd != null)
-                    {
-                        this.exec.execute(procTrd);
-                    }
-                    
-                    if(log != null)
-                    {
-                        this.exec.execute(log);
-                    }
+                    com.remove();
                 }
-                break;
             }
         }
+    }
+
+    public void addComando(String comando){
+        getComandos().add(comando);
+    }
+    
+    /**
+     * @return the logTrd
+     */
+    public Log getLogTrd() {
+        return logTrd;
+    }
+
+    /**
+     * @param logTrd the logTrd to set
+     */
+    public void setLogTrd(Log logTrd) {
+        this.logTrd = logTrd;
+    }
+
+    /**
+     * @return the procTrd
+     */
+    public ProcessaThread getProcTrd() {
+        return procTrd;
+    }
+
+    /**
+     * @param procTrd the procTrd to set
+     */
+    public void setProcTrd(ProcessaThread procTrd) {
+        this.procTrd = procTrd;
+    }
+
+    /**
+     * @return the mapa
+     */
+    public Mapa getMapa() {
+        return mapa;
+    }
+
+    /**
+     * @param mapa the mapa to set
+     */
+    public void setMapa(Mapa mapa) {
+        this.mapa = mapa;
+    }
+
+    /**
+     * @return the comandos
+     */
+    public BlockingQueue<String> getComandos() {
+        return comandos;
+    }
+
+    /**
+     * @param comandos the comandos to set
+     */
+    public void setComandos(BlockingQueue<String> comandos) {
+        this.comandos = comandos;
+    }
+
+    /**
+     * @return the serverSocket
+     */
+    public DatagramSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    /**
+     * @param serverSocket the serverSocket to set
+     */
+    public void setServerSocket(DatagramSocket serverSocket) {
+        this.serverSocket = serverSocket;
+    }
+
+    /**
+     * @return the receivePacket
+     */
+    public DatagramPacket getReceivePacket() {
+        return receivePacket;
+    }
+
+    /**
+     * @param receivePacket the receivePacket to set
+     */
+    public void setReceivePacket(DatagramPacket receivePacket) {
+        this.receivePacket = receivePacket;
     }
 }

@@ -8,47 +8,52 @@ package projeto_servidor;
 
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  *
  * @author Robertta Loise, Rodrigo Machado e Rodrigo Borborema
  */
 public class Log implements Runnable {
-    private List<String> comandos;
+    private BlockingQueue<String> comandos = new LinkedBlockingQueue<String>();
     int i=0;
-            
-    public Log(String comando){
-        this.comandos = new ArrayList<>();
-        this.comandos.add(comando);
-    }
     
     @Override
     public void run() {
         while(true){
-            if(comandos != null && !comandos.isEmpty()){
-                
-                try{ 
-                    
+            if(comandos == null || comandos.isEmpty())
+            {
+                continue;
+            }
+            else
+            {
+                try
+                { 
+                    Iterator<String> comand = comandos.iterator();
                     FileOutputStream fileout = new FileOutputStream("./properties/log.properties", true);
                     Properties prop = ArquivoLog.getProp("log.properties");
                     prop.clear();
+                    String cm = "0";
                     
-                    for (String comando : comandos) 
+                    while(comand.hasNext())
                     {
-                        prop.put("command:"+java.util.UUID.randomUUID(), RetiraLixo("[" + comando + "]"));
+                        cm = comand.next();
+                        prop.put("command:"+java.util.UUID.randomUUID(), RetiraLixo("[" + cm + "]"));
+                        comand.remove();
                     }
                     
                     prop.store(fileout, "Logs sent by client");
                     fileout.flush();
                     
-                } catch(Exception e){
+                } 
+                catch(Exception e)
+                {
                     System.out.println("ERROR ERROR: " + e.getMessage());
                 }
-                
-               
-                break;
             }
         }   
         
@@ -60,4 +65,7 @@ public class Log implements Runnable {
         return x.replaceAll("\u0000", "").replaceAll("\\u0000", "");
     }
     
+    public void addComando(String comando){
+        comandos.add(comando);
+    }
 }
