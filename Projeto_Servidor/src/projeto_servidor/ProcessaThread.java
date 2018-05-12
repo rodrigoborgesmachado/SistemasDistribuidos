@@ -57,6 +57,11 @@ public class ProcessaThread implements Runnable{
                     {
                         /// Cria dados
                         case '1':
+                            if(getMapa().Search(new BigInteger(RetiraLixo(getList().get(1)))) != "")
+                            {
+                                dados = "The key already exists\n";
+                                break;
+                            }
                             setCria(getMapa().Create(new BigInteger(RetiraLixo(getList().get(1))), Value(getList())));
                             if(isCria())
                                 dados = "Created!\n";
@@ -80,7 +85,7 @@ public class ProcessaThread implements Runnable{
                             if(isDeleta())
                                 dados = "Deleted!\n";
                             else
-                                dados = "Was not possible to complete the operation\n";
+                                dados = "The key doesn't exist\n";
                             break;
 
                         /// Busca dado no mapa
@@ -89,7 +94,7 @@ public class ProcessaThread implements Runnable{
                             if(getBusca() != null && !busca.isEmpty())
                                 dados = getBusca()+"\n";
                             else
-                                dados = "There is no key\n";
+                                dados = "The key doesn't exist\n";
                             break;
 
                         /// Retorna todos os dados
@@ -98,7 +103,7 @@ public class ProcessaThread implements Runnable{
                             if(getLista() != null && !lista.isEmpty())
                                 dados = getLista() + "\n";
                             else
-                                dados = "There is no register on database\n";
+                                dados = "There is no register in database\n";
                             break;
 
                         /// Envia 9 para matar cliente 
@@ -143,7 +148,7 @@ public class ProcessaThread implements Runnable{
     {
         List<String> Lista = null;
         String dados = "";
-        System.out.println("Inserindo no mapa: " + valor);
+        //System.out.println("Inserindo no mapa: " + valor);
         valor = RetiraLixo(valor);
         
         Lista = Arrays.asList(valor.split(" "));
