@@ -12,6 +12,7 @@ import io.grpc.SistemasDistruidos.message.ComandResponse;
 import io.grpc.SistemasDistruidos.message.ComandServiceGrpc;
 import io.grpc.stub.ClientCallStreamObserver;
 import io.grpc.stub.ClientResponseObserver;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -23,15 +24,16 @@ import java.util.logging.Logger;
  */
 public class Projeto_Cliente_gRCP implements Runnable {
     
-    int porta = 9876;
-    String host = "localhost";
+    private static final Logger logger =
+        Logger.getLogger(Projeto_Cliente_gRCP.class.getName());
     
     final CountDownLatch done = new CountDownLatch(1);
-     ManagedChannel channel = ManagedChannelBuilder
-        .forAddress(host, porta)
-        .usePlaintext()
-        .build();
+    
+    ManagedChannel channel;
+    
     ComandServiceGrpc.ComandServiceStub stub = ComandServiceGrpc.newStub(channel);
+    
+    String comando = "5";
     
     public static void EscreveMenuCompleto()
     {
@@ -50,91 +52,112 @@ public class Projeto_Cliente_gRCP implements Runnable {
 
     public void run() 
     {
-        ClientResponseObserver<ComandRequest, ComandResponse> clientResponseObserver =
-        new ClientResponseObserver<ComandRequest, ComandResponse>() 
-        {
-            ClientCallStreamObserver<ComandRequest> requestStream;
-
-            @Override
-            public void beforeStart(final ClientCallStreamObserver<ComandRequest> requestStream) 
+        try{
+            Properties prop = ConfigArq.getProp();
+            String porta = prop.getProperty("prop.server.GRPCport");
+            String ip = prop.getProperty("prop.server.GRPChost");
+            channel = ManagedChannelBuilder
+                .forAddress(ip, Integer.parseInt(porta))
+                .usePlaintext()
+                .build();
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        
+        Scanner sc = new Scanner(System.in);
+        this.EscreveMenuCompleto();
+        
+        while(true){
+            ComandServiceGrpc.ComandServiceStub stub = ComandServiceGrpc.newStub(channel);
+            
+            comando = sc.nextLine();
+            
+            if(comando.equals("7"))
             {
-                this.requestStream = requestStream;
-                requestStream.disableAutoInboundFlowControl();
-                requestStream.setOnReadyHandler(
-                    new Runnable() 
-                    {
-                        @Override
-                        public void run() 
+                this.EscreveMenuCompleto();
+                continue;
+            }
+            if(comando.equals("9"))
+            {
+                break;
+            }
+            
+            ClientResponseObserver<ComandRequest, ComandResponse> clientResponseObserver =
+            new ClientResponseObserver<ComandRequest, ComandResponse>() 
+            {
+                ClientCallStreamObserver<ComandRequest> requestStream;
+
+                @Override
+                public void beforeStart(final ClientCallStreamObserver<ComandRequest> requestStream) 
+                {
+                    this.requestStream = requestStream;
+                    requestStream.disableAutoInboundFlowControl();
+                    
+                    requestStream.setOnReadyHandler(
+                        new Runnable() 
                         {
-                            // Start generating values from where we left off on a non-gRPC thread.   
-                            EscreveMenuCompleto();
-                            Scanner sc = new Scanner(System.in);
-                            String name = "";
-                            while(!name.equalsIgnoreCase("9") && requestStream.isReady())
+                            @Override
+                            public void run() 
                             {
-                                // Send more messages if there are more messages to send.
-                                name = sc.nextLine();
-
-                                if(name.equalsIgnoreCase("7"))
+                                if(requestStream.isReady())
                                 {
-                                    EscreveMenuCompleto();
-                                    continue;
-                                }
-
-                                if(name.equalsIgnoreCase("9"))
-                                {
-                                    System.out.println("Finishing!");
+                                    if(comando.equalsIgnoreCase("9"))
+                                    {
+                                        System.out.println("Finishing!");
+                                        try 
+                                        {
+                                            channel.shutdown();
+                                        } 
+                                        catch (Exception e) 
+                                        {
+                                            System.out.println("ERROR ERROR: " + e.getMessage());
+                                        }
+                                    }
+                                    ComandRequest request = ComandRequest.newBuilder().setComm(comando).build();
+                                    requestStream.onNext(request);
+                                    
                                     try 
                                     {
-                                        channel.shutdown();
+                                        Thread.sleep(300);
                                     } 
-                                    catch (Exception e) 
+                                    catch (InterruptedException e) 
                                     {
-                                        System.out.println("ERROR ERROR: " + e.getMessage());
+                                        System.out.println("ERRO ERRO: " + e.getMessage());
                                     }
+                                    if(comando.charAt(0) != '6')
+                                        requestStream.onCompleted();
                                 }
-                                ComandRequest request = ComandRequest.newBuilder().setComm(name).build();
-                                requestStream.onNext(request);
                             }
                         }
-                    }
-                );
-            }
+                    );
+                }
 
-            @Override
-            public void onNext(ComandResponse v) 
-            {
-                System.out.println("Response: " + v.getCmd());
-                requestStream.request(1);
-            }
+                @Override
+                public void onNext(ComandResponse respost) 
+                {
+                    System.out.println("Response: " + respost.getCmd());
+                    requestStream.request(1);
+                }
 
-            @Override
-            public void onError(Throwable thrwbl) 
-            {
-                System.out.println("ERROR ERROR: " + thrwbl.getMessage());
-            }
+                @Override
+                public void onError(Throwable thrwbl) 
+                {
+                    System.out.println("ERROR ERROR: " + thrwbl.getMessage());
+                }
 
-            @Override
-            public void onCompleted() 
-            {
-                System.out.println("All Done");
-            }
-        };
-        stub.cmd(clientResponseObserver);
-        try 
-        {
-            done.await();
-            channel.shutdown();
-            channel.awaitTermination(1, TimeUnit.SECONDS);
-        } 
-        catch (InterruptedException e) 
-        {
-            System.out.println("ERROR ERROR: " + e.getMessage());
-        }
-        catch(Exception e)
-        {
-            System.out.println("ERROR ERROR: " + e.getMessage());
-        }
+                @Override
+                public void onCompleted() 
+                {
+                    System.out.println("Search Done");
+                }
+            };
+            stub.cmd(clientResponseObserver);
             
+            System.out.println("New request: ");
+        
+            if(comando.charAt(0) == '9'){
+                break;
+            }
+        }   
     }
 }

@@ -14,10 +14,13 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  *
@@ -60,6 +63,27 @@ public class MainServidor {
         
         String porta = prop.getProperty("server.port");
         DatagramSocket serverSocket = new DatagramSocket(Integer.parseInt(porta));
+        ArrayList<File> arquivos = new ArrayList<File>();
+        File logFile = new File("./properties/log.properties");
+        File diretorio = new File("./properties/SnapShot/");
+        File snapFile = new File("");
+        
+        if(diretorio.exists())
+        {
+            File files[] = diretorio.listFiles();   
+            if(files.length > 0)
+                snapFile = files[files.length-1];
+        }
+            
+        if(logFile.exists())
+        {
+            arquivos.add(logFile);
+        }
+            
+        if(snapFile.exists())
+        {
+            arquivos.add(snapFile);
+        }
         
         byte[] receiveData = new byte[1401];
         byte[] sendData = new byte[1401];
@@ -70,20 +94,51 @@ public class MainServidor {
             ProcessaThread pt = new ProcessaThread();        
             
             mapa = new HashMap<BigInteger, String>((Map) arq);
-                                
-            Set propertySet = mapa.entrySet();
-            for(Object o: propertySet)
-            {
-                Map.Entry entry = (Map.Entry) o;
-                lista = Arrays.asList(o.toString().split("\\["));
-                map = pt.CarregaDados(lista.get(1), map);
+            TreeMap<BigInteger, String> mapOrdenado = new TreeMap<BigInteger, String>();
+            ArrayList<Dados> registros = new ArrayList<Dados>();
+            
+            for(File f : arquivos){
+                Set propertySet = mapa.entrySet();
+                for(Object o: propertySet)
+                {
+                    Map.Entry entry = (Map.Entry) o;
+                    String entrada = entry.getValue().toString();
+                    String partes[] = entrada.split(" ");
+                    String chave = partes[1];
+                    String comando = partes[0].replace("[", "");
+                    String valor = "";
+                    
+                    for(int i = 2; i < partes.length; i++)
+                        valor += partes[i] + " ";
+                    
+                    valor = valor.substring(0, valor.length() - 2);
+                    
+                    lista = Arrays.asList(o.toString().split("\\["));
+                    map = pt.CarregaDados(lista.get(1), map);
+                }
             }
             
+            Collections.sort(registros, new Comparator<Dados>() {
+                public int compare(Dados r1, Dados r2) {
+                    Long s1 = r1.getDataCriacao();
+                    Long s2 = r2.getDataCriacao();
+                    return (s1 < s2 ? -1 : (s1 == s2 ? 1 : 0));
+                }
+            });
+            
+            for(Dados r: registros)
+            {   
+                String frase = r.getComando().toString() + " " 
+                             + r.getChave().toString() + " " 
+                             + r.getValor();
+                map = pt.CarregaDados(frase, map);
+            }
+            System.out.println("Vou iniciar!");
             Log logTrd = new Log();
             ConsumirThread conTrd = new ConsumirThread(logTrd, pt);
             rcvThread = new RecebeThread(conTrd, serverSocket, map);
-            porta = prop.getProperty("serverGRPC.port");
-            RecebeThread_gRCP grpcRcv = new RecebeThread_gRCP(conTrd, map, pt, Integer.parseInt(porta));
+            RecebeThread_gRCP grpcRcv = new RecebeThread_gRCP(conTrd, map, pt);
+            
             // Inicia as threads
             exec.execute(rcvThread);
             exec.execute(conTrd);
@@ -91,9 +146,9 @@ public class MainServidor {
             exec.execute(pt);
             exec.execute(grpcRcv);
 
-            System.out.println("Server Initialized!");
             
             exec.shutdown();
+            System.out.println("Server Initialized!");
             while (!exec.awaitTermination(24L, TimeUnit.HOURS)) 
             {
                 System.out.println("Processing.");

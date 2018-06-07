@@ -6,6 +6,8 @@
 package projeto_servidor;
 
 import java.io.*;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 /**
@@ -20,6 +22,11 @@ public class ArquivoLog {
 	FileInputStream file = new FileInputStream("./properties/" + s);
 	props.load(file);
 	return props;
-   }
-    
+    }
+   
+    public static Long timeStamp(){
+        Timestamp timestamp = new Timestamp(System.nanoTime());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+        return timestamp.getTime();
+    } 
 }

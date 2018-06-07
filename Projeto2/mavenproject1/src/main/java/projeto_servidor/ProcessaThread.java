@@ -29,9 +29,10 @@ public class ProcessaThread implements Runnable{
     private boolean cria, deleta, atualiza;
     private Mapa mapa;
     private List<String> list = new ArrayList<String>();
-    private String monChave;
+    private String monChave = " ";
     private io.grpc.stub.StreamObserver<ComandResponse> responseObserverGrpc;
-    
+    private List<MonitorObject> monitorObject = new ArrayList<MonitorObject>();
+        
     public ProcessaThread()
     {
         System.out.println("-----Loading-----");
@@ -42,16 +43,16 @@ public class ProcessaThread implements Runnable{
     {
         byte[] sendData = new byte[1401];
         String dados="";
-        
+        String c;
         while(true)
         {
             try
             {
                 Iterator<String> cmd = getComandos().iterator();
-                String c;
                 /// Para cada comandos da lista
                 while(cmd.hasNext())
                 {
+                    
                     c = cmd.next();
                     cmd.remove();
                     sendData = c.getBytes();
@@ -131,23 +132,72 @@ public class ProcessaThread implements Runnable{
                         sendData = dados.getBytes();
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, getReceivePacket().getAddress(), getReceivePacket().getPort());
                         getServerSocket().send(sendPacket);
+                        
+                        if(getList().get(0).equalsIgnoreCase("9")){
+                            MonitorObject monObj = new MonitorObject();
+                            monObj.setMonChave(monChave);
+                            monObj.setPacoteUdp(sendPacket);
+                            monObj.setSocketUdp(serverSocket);
+                            monitorObject.add(monObj);
+                        }
+                        
                     }
                     
-                    if(responseObserverGrpc != null && !getList().get(0).equalsIgnoreCase("5") 
-                       && !getList().get(0).equalsIgnoreCase("6"))
+                    if(responseObserverGrpc != null)
                     {
-                        if(monChave.equalsIgnoreCase(getList().get(1)))
+                        if(!getList().get(0).equalsIgnoreCase("6"))
                         {
                             ComandResponse rspGrpc = ComandResponse.newBuilder().setCmd(dados + " " + getList()).build();
                             this.responseObserverGrpc.onNext(rspGrpc);
                             this.responseObserverGrpc.onCompleted();
                         }
+                        else
+                        {
+                            MonitorObject monObj = new MonitorObject();
+                            monObj.setMonChave(monChave);
+                            monObj.setResponseObserverGrpc(responseObserverGrpc);
+                            monitorObject.add(monObj);
+                            ComandResponse rspGrpc = ComandResponse.newBuilder().setCmd(dados + " ").build();
+                            this.responseObserverGrpc.onNext(rspGrpc);
+                        }
                     }
+                }
+                
+                if(monitorObject.size() > 0 && !getList().get(0).equalsIgnoreCase("5") && !getList().get(0).equalsIgnoreCase("6"))
+                {
+                    for(MonitorObject mo : monitorObject)
+                    {
+                        if(mo.getSocketUdp() != null && mo.getMonChave().equalsIgnoreCase(getList().get(1)))
+                        {
+                            dados = "Callback from the key - " +mo.getMonChave()+ " Charges: " + getList().toString() +"\n";
+                            sendData = dados.getBytes();
+                            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, mo.getPacoteUdp().getAddress(), mo.getPacoteUdp().getPort());
+                            DatagramSocket ss = mo.getSocketUdp();
+                            ss.send(sendPacket);
+                        }
+                                
+                        if(mo.getResponseObserverGrpc() != null && mo.getMonChave().equalsIgnoreCase(getList().get(1))
+                                        && !getList().get(0).equalsIgnoreCase("5") && !getList().get(0).equalsIgnoreCase("7"))
+                        {
+                            try{
+                                dados = "Callback from the key - " +mo.getMonChave()+ "  Charges: " + getList().toString() +"\n";
+                                ComandResponse rspGrpc = ComandResponse.newBuilder().setCmd(dados + " ").build();
+                                mo.getResponseObserverGrpc().onNext(rspGrpc);
+                            } 
+                            catch(Exception e)
+                            {
+                                System.out.println("ERROR ERROR: " + e.getMessage());
+                            }
+                        }
+                    }
+                    cmd.remove();
+                    receivePacket = null;
+                    responseObserverGrpc = null;
                 }
             } 
             catch(Exception e)
             {
-                System.out.println(e.getMessage());
+                System.out.println("ERROR ERROR: "+e.getMessage());
             }   
         }
     }
