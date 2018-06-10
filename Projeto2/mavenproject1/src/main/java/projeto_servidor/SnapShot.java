@@ -49,19 +49,17 @@ public class SnapShot implements Runnable{
                 fileOut.close();
                 
                 Thread.sleep(segundos*1000);
-                
 
                 excluiLog();
             }
         }catch(Exception e){
-            e.printStackTrace();
-            e.getMessage();
+            System.out.println("ERROR ERROR SnapShot: " + e.getMessage());
         }
     }
     
     private int intervaloSnapShot() throws IOException{
         Properties propSegundos = ArquivoLog.getProp("config.properties");
-        return Integer.parseInt(propSegundos.getProperty("prop.snap shot.segundos"));
+        return Integer.parseInt(propSegundos.getProperty("prop.snap.shot.segundos"));
     }
     
     private boolean trataQtdSnaps(){

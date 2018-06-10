@@ -90,6 +90,7 @@ public class MainServidor {
         
         try
         {
+            
             ExecutorService exec = Executors.newCachedThreadPool();
             ProcessaThread pt = new ProcessaThread();        
             
@@ -114,6 +115,7 @@ public class MainServidor {
                     valor = valor.substring(0, valor.length() - 2);
                     
                     lista = Arrays.asList(o.toString().split("\\["));
+                    
                     map = pt.CarregaDados(lista.get(1), map);
                 }
             }
@@ -133,18 +135,19 @@ public class MainServidor {
                              + r.getValor();
                 map = pt.CarregaDados(frase, map);
             }
-            System.out.println("Vou iniciar!");
+            
             Log logTrd = new Log();
             ConsumirThread conTrd = new ConsumirThread(logTrd, pt);
             rcvThread = new RecebeThread(conTrd, serverSocket, map);
             RecebeThread_gRCP grpcRcv = new RecebeThread_gRCP(conTrd, map, pt);
-            
+            SnapShot ss = new SnapShot(map);
             // Inicia as threads
             exec.execute(rcvThread);
             exec.execute(conTrd);
             exec.execute(logTrd);
             exec.execute(pt);
             exec.execute(grpcRcv);
+            exec.execute(ss);
 
             
             exec.shutdown();
@@ -157,7 +160,7 @@ public class MainServidor {
         } 
         catch(Exception e)
         {
-            System.out.println("ERROR ERROR: " +  e.getMessage());
+            System.out.println("ERROR ERROR aqui: " +  e.getMessage());
         }        
     }
 }

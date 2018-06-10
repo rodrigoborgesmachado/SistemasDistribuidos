@@ -75,7 +75,7 @@ import java.util.logging.Logger;
                                 wasReady.set(false);
                             }
                         } catch (Exception ex) {
-                            System.out.println("ERROR ERROR: "+ex.getMessage());
+                            System.out.println("ERROR ERROR TerecebThread_gRCP: "+ex.getMessage());
                         }
                     }
 
@@ -114,7 +114,7 @@ import java.util.logging.Logger;
         } 
         catch (Exception e) 
         {
-            System.out.println("ERROR ERROR: " + e.getMessage());
+            System.out.println("ERROR ERROR TerecebThread_gRCP: " + e.getMessage());
             return;
         }        
         

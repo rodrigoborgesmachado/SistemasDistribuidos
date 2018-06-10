@@ -56,7 +56,7 @@ public class Log implements Runnable {
                 } 
                 catch(Exception e)
                 {
-                    System.out.println("ERROR ERROR: " + e.getMessage());
+                    System.out.println("ERROR ERROR log.java: " + e.getMessage());
                 }
             }
         }   

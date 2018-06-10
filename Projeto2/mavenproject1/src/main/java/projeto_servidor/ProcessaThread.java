@@ -197,7 +197,7 @@ public class ProcessaThread implements Runnable{
             } 
             catch(Exception e)
             {
-                System.out.println("ERROR ERROR: "+e.getMessage());
+                System.out.println("ERROR ERROR ProcessaThread.java: "+e.getMessage());
             }   
         }
     }
